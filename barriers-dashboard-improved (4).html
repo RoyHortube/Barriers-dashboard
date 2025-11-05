@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barriers to Execution - Team Dashboard</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .critical-alert {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const BarriersApp = () => {
+            const [expandedSections, setExpandedSections] = useState({});
+            const [selectedIdeas, setSelectedIdeas] = useState([]);
+            const [votedIdeas, setVotedIdeas] = useState({});
+            const [activeTab, setActiveTab] = useState('overview');
+
+            const toggleSection = (section) => {
+                setExpandedSections(prev => ({...prev, [section]: !prev[section]}));
+            };
+
+            const toggleIdeaSelection = (ideaId) => {
+                setSelectedIdeas(prev => 
+                    prev.includes(ideaId) ? prev.filter(id => id !== ideaId) : [...prev, ideaId]
+                );
+            };
+
+            const voteIdea = (ideaId) => {
+                setVotedIdeas(prev => ({...prev, [ideaId]: (prev[ideaId] || 0) + 1}));
+            };
+
+            const departmentScores = {
+                q1: { 
+                    score: 6.72, 
+                    label: 'Understanding', 
+                    color: 'bg-yellow-500', 
+                    status: 'IMPROVING',
+                    question: 'How clearly do you understand what the "Barriers to Execution" pillar means for our department?'
+                },
+                q2: { 
+                    score: 8.05, 
+                    label: 'Leadership Effectiveness', 
+                    color: 'bg-green-500', 
+                    status: 'GOOD',
+                    question: 'How well do you feel leadership is currently removing obstacles to help you deliver your work efficiently?'
+                },
+                q3: { 
+                    score: 8.88, 
+                    label: 'Importance', 
+                    color: 'bg-green-600', 
+                    status: 'STRONG',
+                    question: 'How important do you think it is for leadership to focus on removing barriers to execution?'
+                },
+                overall: { 
+                    score: 7.88, 
+                    label: 'Overall Average', 
+                    color: 'bg-blue-500', 
+                    status: 'GOOD',
+                    question: 'Average of all three questions'
+                }
+            };
+
+            const supervisors = [
+                { name: 'Deb Walters', responses: 6, q1: 4.83, q2: 7.50, q3: 9.67, overall: 7.33, alert: 'critical' },
+                { name: 'Jeanette Sheehan', responses: 5, q1: 5.00, q2: 9.00, q3: 7.20, overall: 7.07, alert: 'warning' },
+                { name: 'Laura Benitez (Alcestis Llanderal)', responses: 8, q1: 8.63, q2: 7.88, q3: 9.50, overall: 8.67, alert: 'none' },
+                { name: 'Mark Durnin', responses: 10, q1: 7.00, q2: 7.80, q3: 8.60, overall: 7.80, alert: 'none' },
+                { name: "Mathew O'Donnell", responses: 5, q1: 7.80, q2: 6.80, q3: 9.00, overall: 7.87, alert: 'none' },
+                { name: 'Ricardo Ortiz', responses: 3, q1: 5.00, q2: 9.67, q3: 10.00, overall: 8.22, alert: 'warning' },
+                { name: 'Roy Hortube', responses: 6, q1: 7.00, q2: 8.67, q3: 8.50, overall: 8.06, alert: 'none' }
+            ];
+
+            const improvementIdeas = [
+                {
+                    id: 'q1-1',
+                    category: 'Q1: Understanding',
+                    categoryColor: 'bg-red-50 border-red-500',
+                    iconColor: 'text-red-600',
+                    title: 'Create Simple Definition + Real Examples',
+                    description: 'Develop a one-page visual guide titled "What Are Barriers to Execution?"',
+                    discussion: [
+                        'Define: A barrier is anything preventing efficient work completion',
+                        'Share 5-7 real examples from department (system latency, missing docs, unclear processes)',
+                        'Ask team: What would you add to this list?'
+                    ],
+                    timeline: 'Week 1-2',
+                    priority: 'CRITICAL',
+                    impact: 'HIGH'
+                },
+                {
+                    id: 'q1-2',
+                    category: 'Q1: Understanding',
+                    categoryColor: 'bg-red-50 border-red-500',
+                    iconColor: 'text-red-600',
+                    title: 'Monthly "Barrier Spotlight"',
+                    description: 'Dedicate 5 minutes in each team meeting to discuss one barrier and resolution',
+                    discussion: [
+                        'Make it tangible - spotlight one barrier monthly',
+                        'Example: This month\'s barrier is Crown loading failures',
+                        'Rotating ownership: different teammates present barriers'
+                    ],
+                    timeline: 'Start next meeting',
+                    priority: 'CRITICAL',
+                    impact: 'HIGH'
+                },
+                {
+                    id: 'q1-3',
+                    category: 'Q1: Understanding',
+                    categoryColor: 'bg-red-50 border-red-500',
+                    iconColor: 'text-red-600',
+                    title: 'Interactive Workshop - "Identify Your Barriers"',
+                    description: '20-minute breakout session mapping workflows and flagging obstacles',
+                    discussion: [
+                        'Use sticky notes/whiteboard for typical case flow',
+                        'Circle friction points, delays, frustrations',
+                        'Group similar barriers to see patterns'
+                    ],
+                    timeline: 'Week 3-4',
+                    priority: 'HIGH',
+                    impact: 'MEDIUM'
+                },
+                {
+                    id: 'q2-1',
+                    category: 'Q2: Leadership Effectiveness',
+                    categoryColor: 'bg-orange-50 border-orange-500',
+                    iconColor: 'text-orange-600',
+                    title: 'Bi-Weekly "Barriers Removed" Report',
+                    description: 'Create tracker showing reported barriers and their status',
+                    discussion: [
+                        'Show transparency: These 10 barriers reported, here\'s status',
+                        'Fixed ✅ / In Progress 🔄 / Escalated ⏳',
+                        'Keep leadership accountable and team informed'
+                    ],
+                    timeline: 'Start immediately',
+                    priority: 'HIGH',
+                    impact: 'HIGH'
+                },
+                {
+                    id: 'q2-2',
+                    category: 'Q2: Leadership Effectiveness',
+                    categoryColor: 'bg-orange-50 border-orange-500',
+                    iconColor: 'text-orange-600',
+                    title: 'Fast-Track Barrier Reporting Channel',
+                    description: 'Set up dedicated Slack/Teams channel for immediate reporting',
+                    discussion: [
+                        'Current process is too slow (1-on-1s, surveys)',
+                        'New: See barrier → Report immediately → Daily leadership review',
+                        'Commit to 24-hour acknowledgment'
+                    ],
+                    timeline: 'Week 1',
+                    priority: 'HIGH',
+                    impact: 'HIGH'
+                },
+                {
+                    id: 'q2-3',
+                    category: 'Q2: Leadership Effectiveness',
+                    categoryColor: 'bg-orange-50 border-orange-500',
+                    iconColor: 'text-orange-600',
+                    title: 'Empower "Barrier Busters"',
+                    description: 'Create rotating role where 2 teammates per month identify and escalate barriers',
+                    discussion: [
+                        'Teammates see barriers first',
+                        '2 volunteers monthly as Barrier Busters',
+                        'Collect barriers, meet weekly with leadership, help prioritize'
+                    ],
+                    timeline: 'Month 1',
+                    priority: 'MEDIUM',
+                    impact: 'MEDIUM'
+                },
+                {
+                    id: 'sys-1',
+                    category: 'Systems & Technology',
+                    categoryColor: 'bg-rose-50 border-rose-600',
+                    iconColor: 'text-rose-700',
+                    title: 'Weekly IT Office Hours',
+                    description: 'Partner with IT/GSD for 30-min weekly sessions for direct tech issue reporting',
+                    discussion: [
+                        'Teammates report tech issues directly',
+                        'IT provides live troubleshooting',
+                        'Explains systemic issues progress'
+                    ],
+                    timeline: 'Week 2',
+                    priority: 'CRITICAL',
+                    impact: 'HIGH'
+                },
+                {
+                    id: 'sys-2',
+                    category: 'Systems & Technology',
+                    categoryColor: 'bg-rose-50 border-rose-600',
+                    iconColor: 'text-rose-700',
+                    title: 'Tech Issue Severity Matrix',
+                    description: 'Define urgency levels with team input',
+                    discussion: [
+                        'Define: What\'s urgent vs. annoying but workable?',
+                        'Prioritize escalations by productivity impact',
+                        'Transparency on why some fixes are faster'
+                    ],
+                    timeline: 'Week 1-2',
+                    priority: 'HIGH',
+                    impact: 'MEDIUM'
+                },
+                {
+                    id: 'comm-1',
+                    category: 'Communication',
+                    categoryColor: 'bg-amber-50 border-amber-500',
+                    iconColor: 'text-amber-700',
+                    title: 'Communication Audit with Team',
+                    description: 'Map all current channels and consolidate',
+                    discussion: [
+                        'List all channels (email, Slack, Teams, Loop, meetings)',
+                        'Ask: Which do you check? Which are redundant?',
+                        'Consolidate to 2-3 primary channels max'
+                    ],
+                    timeline: 'Week 1-2',
+                    priority: 'HIGH',
+                    impact: 'HIGH'
+                },
+                {
+                    id: 'comm-2',
+                    category: 'Communication',
+                    categoryColor: 'bg-amber-50 border-amber-500',
+                    iconColor: 'text-amber-700',
+                    title: 'Monthly "State of the Team" Newsletter',
+                    description: '1-page summary of updates and progress',
+                    discussion: [
+                        'What happened last month, what\'s coming',
+                        'Barriers addressed section with timelines',
+                        'Teammates contribute 1-2 sentences on wins/challenges'
+                    ],
+                    timeline: 'Start Month 1',
+                    priority: 'MEDIUM',
+                    impact: 'MEDIUM'
+                },
+                {
+                    id: 'doc-1',
+                    category: 'Documentation',
+                    categoryColor: 'bg-emerald-50 border-emerald-500',
+                    iconColor: 'text-emerald-700',
+                    title: 'Documentation Ownership Program',
+                    description: 'Assign each major process/tool to a specific teammate as doc owner',
+                    discussion: [
+                        'Doc owner keeps it updated quarterly',
+                        'Notifies team of changes',
+                        'Rotate ownership every 6 months'
+                    ],
+                    timeline: 'Month 1',
+                    priority: 'MEDIUM',
+                    impact: 'MEDIUM'
+                },
+                {
+                    id: 'doc-2',
+                    category: 'Documentation',
+                    categoryColor: 'bg-emerald-50 border-emerald-500',
+                    iconColor: 'text-emerald-700',
+                    title: 'Quick Start Guide Repository',
+                    description: 'Create 1-page Quick Starts for every tool/access/process',
+                    discussion: [
+                        'Format: What is it? When to use? How to access? Common problems?',
+                        'Store in centralized, searchable location',
+                        'Easy onboarding for new teammates'
+                    ],
+                    timeline: 'Month 1-2',
+                    priority: 'HIGH',
+                    impact: 'MEDIUM'
+                }
+            ];
+
+            const generateExcelDownload = () => {
+                const csvContent = `Category,Idea Title,Priority,Impact,Votes,Selected,Timeline
+${improvementIdeas.map(idea => 
+    `"${idea.category}","${idea.title}","${idea.priority}","${idea.impact}",${votedIdeas[idea.id] || 0},${selectedIdeas.includes(idea.id) ? 'Yes' : 'No'},"${idea.timeline}"`
+).join('\n')}
+
+FINAL DEPARTMENT SCORES (43 teammates)
+Q1 Understanding: 6.72/10 - IMPROVING - Positive Trend
+Q2 Leadership: 8.05/10 - GOOD
+Q3 Importance: 8.88/10 - STRONG
+Overall: 7.88/10 - GOOD
+
+SUPERVISOR SCORES
+Deb Walters: 7.33/10 (6 responses) - CRITICAL: Q1 at 4.83 - IMMEDIATE ATTENTION REQUIRED
+Jeanette Sheehan: 7.07/10 (5 responses) - WARNING: Q1 at 5.00
+Laura Benitez: 8.67/10 (8 responses) - Excellent: Q1 at 8.63
+Mark Durnin: 7.80/10 (10 responses) - Good: Q1 at 7.00
+Mathew O'Donnell: 7.87/10 (5 responses) - Good: Q1 at 7.80
+Ricardo Ortiz: 8.22/10 (3 responses) - WARNING: Q1 at 5.00
+Roy Hortube: 8.06/10 (6 responses) - Good: Q1 at 7.00`;
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'Team_Barriers_Results_UPDATED.csv');
+                link.click();
+            };
+
+            const ChevronDown = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>;
+            const ChevronUp = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="18 15 12 9 6 15"></polyline></svg>;
+            const Download = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+            const AlertTriangle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+            const TrendingUp = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>;
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+
+
+                    {/* Critical Alert Banner */}
+                    <div className="bg-yellow-600 text-white py-3 px-4">
+                        <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+                            <AlertTriangle />
+                            <span className="font-bold text-lg">⚠️ Q1 Understanding Score (6.72/10) - Continuing to Improve</span>
+                            <AlertTriangle />
+                        </div>
+                    </div>
+
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-8 shadow-2xl">
+                        <div className="max-w-7xl mx-auto">
+                            <h1 className="text-5xl font-bold mb-2">🎯 Barriers to Execution Dashboard</h1>
+                            <p className="text-slate-300 text-lg">Action Required: Team Alignment & Improvement Planning</p>
+                        </div>
+                    </div>
+
+                    {/* Navigation Tabs */}
+                    <div className="bg-white shadow-lg sticky top-0 z-10 border-b-4 border-slate-200">
+                        <div className="max-w-7xl mx-auto px-8">
+                            <div className="flex gap-2">
+                                {[
+                                    {id: 'overview', label: '📊 Overview', badge: null},
+                                    {id: 'ideas', label: '💡 Action Items', badge: improvementIdeas.filter(i => i.priority === 'CRITICAL').length},
+                                    {id: 'supervisors', label: '👥 By Team', badge: supervisors.filter(s => s.alert === 'critical').length}
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`px-6 py-4 font-bold transition-all relative ${
+                                            activeTab === tab.id
+                                                ? 'text-slate-800 border-b-4 border-blue-600 bg-blue-50'
+                                                : 'text-gray-600 hover:text-slate-800 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                        {tab.badge && (
+                                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                                {tab.badge}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-7xl mx-auto p-8">
+                        {/* Overview Tab */}
+                        {activeTab === 'overview' && (
+                            <div className="space-y-8">
+                                {/* Critical Issues Banner */}
+                                <div className="bg-yellow-50 border-l-8 border-yellow-600 rounded-lg p-6 shadow-lg">
+                                    <div className="flex items-start gap-4">
+                                        <div className="text-yellow-600 mt-1">
+                                            <AlertTriangle />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-2xl font-bold text-yellow-900 mb-3">⚠️ Focus Areas for Continued Improvement</h3>
+                                            <div className="space-y-2 text-yellow-800">
+                                                <p className="text-lg font-semibold">1. Team Understanding (6.72/10) - Steadily improving</p>
+                                                <p className="ml-6">→ Deb Walters' team at 4.83/10 remains the main priority</p>
+                                                <p className="ml-6">→ Ricardo Ortiz team at 5.00/10 needs continued attention</p>
+                                                <p className="ml-6">→ Jeanette Sheehan team at 5.00/10 needs continued attention</p>
+                                                <p className="ml-6">→ Most teams showing positive progress on understanding</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Department Scores */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-slate-200">
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                                        📈 Department Performance Overview
+                                        <span className="text-sm font-normal text-gray-500">(43 teammates)</span>
+                                    </h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                        {Object.entries(departmentScores).map(([key, data]) => (
+                                            <div key={key} className={`text-center p-6 rounded-xl border-4 ${
+                                                data.status === 'CRITICAL' ? 'border-red-500 bg-red-50' :
+                                                data.status.includes('IMPROVED') || data.status.includes('EXCELLENT') || data.status.includes('GOOD') ? 'border-green-500 bg-green-50' :
+                                                'border-blue-500 bg-blue-50'
+                                            }`}>
+                                                <div className="mb-3">
+                                                    <div className="text-5xl font-black text-gray-900">{data.score}</div>
+                                                    <div className="text-lg text-gray-600 font-semibold">/10</div>
+                                                </div>
+                                                <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${
+                                                    data.status === 'CRITICAL' ? 'bg-red-600 text-white' :
+                                                    data.status.includes('⬆️') ? 'bg-green-600 text-white' :
+                                                    'bg-blue-600 text-white'
+                                                }`}>
+                                                    {data.status}
+                                                </div>
+                                                <div className="w-full bg-gray-300 rounded-full h-4 mb-3 overflow-hidden">
+                                                    <div 
+                                                        className={`${data.color} h-4 transition-all duration-1000 rounded-full`}
+                                                        style={{ width: `${(data.score / 10) * 100}%` }}
+                                                    />
+                                                </div>
+                                                <div className="text-sm font-bold text-gray-800">{data.label}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Key Insights */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-gradient-to-br from-red-50 to-red-100 border-l-8 border-red-600 rounded-xl p-6 shadow-lg">
+                                        <div className="flex items-start gap-3 mb-4">
+                                            <span className="text-4xl">⚠️</span>
+                                            <div>
+                                                <h3 className="font-black text-red-900 text-xl mb-2">STILL NEEDS ATTENTION</h3>
+                                                <p className="text-red-800 font-semibold text-lg">Q1: Understanding (6.72)</p>
+                                                <p className="text-red-700 text-sm mt-2">Continue clarifying the concept</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-red-200 rounded-lg p-4 mt-4">
+                                            <p className="text-red-900 font-bold text-sm">📌 Priority Actions:</p>
+                                            <ul className="text-red-800 text-xs mt-2 space-y-1">
+                                                <li>• Create visual guide (Week 1-2)</li>
+                                                <li>• Monthly barrier spotlight</li>
+                                                <li>• Team workshop session</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-l-8 border-yellow-600 rounded-xl p-6 shadow-lg">
+                                        <div className="flex items-start gap-3 mb-4">
+                                            <span className="text-4xl">✅</span>
+                                            <div>
+                                                <h3 className="font-black text-yellow-900 text-xl mb-2">GOOD PERFORMANCE</h3>
+                                                <p className="text-yellow-800 font-semibold text-lg">Q2: Leadership (8.05)</p>
+                                                <p className="text-yellow-700 text-sm mt-2">Maintain current approach</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-yellow-200 rounded-lg p-4 mt-4">
+                                            <p className="text-yellow-900 font-bold text-sm">📌 Continue:</p>
+                                            <ul className="text-yellow-800 text-xs mt-2 space-y-1">
+                                                <li>• Bi-weekly status reports</li>
+                                                <li>• Fast-track reporting channel</li>
+                                                <li>• Barrier Busters program</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gradient-to-br from-green-50 to-green-100 border-l-8 border-green-600 rounded-xl p-6 shadow-lg">
+                                        <div className="flex items-start gap-3 mb-4">
+                                            <span className="text-4xl">✅</span>
+                                            <div>
+                                                <h3 className="font-black text-green-900 text-xl mb-2">STRONG FOUNDATION</h3>
+                                                <p className="text-green-800 font-semibold text-lg">Q3: Importance (8.88)</p>
+                                                <p className="text-green-700 text-sm mt-2">Team highly values this initiative</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-green-200 rounded-lg p-4 mt-4">
+                                            <p className="text-green-900 font-bold text-sm">💪 Strengths:</p>
+                                            <ul className="text-green-800 text-xs mt-2 space-y-1">
+                                                <li>• 8.88/10 importance rating</li>
+                                                <li>• Team ready to engage</li>
+                                                <li>• High motivation to improve</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Ideas Tab - same as before */}
+                        {activeTab === 'ideas' && (
+                            <div className="space-y-6">
+                                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-2xl p-8 text-white">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h2 className="text-4xl font-bold mb-2">💡 Prioritize Action Items</h2>
+                                            <p className="text-blue-100 text-lg">Vote and select which initiatives to implement first</p>
+                                        </div>
+                                        <div className="text-center bg-white text-blue-600 rounded-xl p-6 shadow-lg min-w-[150px]">
+                                            <div className="text-5xl font-black">{selectedIdeas.length}</div>
+                                            <div className="text-sm font-bold mt-2">Selected</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-red-50 border-4 border-red-500 rounded-2xl p-6">
+                                    <h3 className="text-2xl font-black text-red-900 mb-4 flex items-center gap-2">
+                                        <AlertTriangle /> CRITICAL PRIORITY ITEMS
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {improvementIdeas.filter(i => i.priority === 'CRITICAL').map(idea => (
+                                            <div 
+                                                key={idea.id} 
+                                                className={`border-l-8 ${idea.categoryColor} bg-white rounded-xl shadow-xl hover:shadow-2xl transition-all`}
+                                            >
+                                                <div className="p-6">
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div className="flex items-start gap-4 flex-1">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedIdeas.includes(idea.id)}
+                                                                onChange={() => toggleIdeaSelection(idea.id)}
+                                                                className="mt-2 w-6 h-6 text-blue-600 rounded focus:ring-4 focus:ring-blue-300"
+                                                            />
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-3 mb-3">
+                                                                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">{idea.category}</span>
+                                                                    <span className="px-3 py-1 bg-red-600 text-white text-xs font-black rounded-full animate-pulse-slow">
+                                                                        ⚠️ {idea.priority}
+                                                                    </span>
+                                                                    <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
+                                                                        Impact: {idea.impact}
+                                                                    </span>
+                                                                </div>
+                                                                <h3 className="font-black text-gray-900 text-2xl mb-2">{idea.title}</h3>
+                                                                <p className="text-gray-700 text-base mb-4 font-medium">{idea.description}</p>
+                                                                
+                                                                <button
+                                                                    onClick={() => toggleSection(idea.id)}
+                                                                    className="text-blue-700 text-sm font-bold flex items-center gap-2 hover:text-blue-900 bg-blue-50 px-4 py-2 rounded-lg"
+                                                                >
+                                                                    {expandedSections[idea.id] ? <ChevronUp /> : <ChevronDown />}
+                                                                    {expandedSections[idea.id] ? 'Hide' : 'Show'} Discussion Points
+                                                                </button>
+
+                                                                {expandedSections[idea.id] && (
+                                                                    <div className="mt-4 p-5 bg-gray-50 rounded-xl border-2 border-gray-200">
+                                                                        <p className="text-sm font-black text-gray-800 mb-3">📋 Discussion Points:</p>
+                                                                        <ul className="space-y-3">
+                                                                            {idea.discussion.map((point, idx) => (
+                                                                                <li key={idx} className="text-sm text-gray-700 flex items-start gap-3 font-medium">
+                                                                                    <span className="text-blue-600 font-bold text-lg">•</span>
+                                                                                    <span>{point}</span>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-col items-end gap-3">
+                                                            <button
+                                                                onClick={() => voteIdea(idea.id)}
+                                                                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-black transition-all shadow-lg hover:shadow-xl text-lg"
+                                                            >
+                                                                👍 VOTE
+                                                            </button>
+                                                            <div className="text-center bg-blue-50 rounded-lg px-4 py-2 min-w-[100px]">
+                                                                <div className="text-2xl font-black text-blue-600">{votedIdeas[idea.id] || 0}</div>
+                                                                <div className="text-xs text-gray-600 font-bold">votes</div>
+                                                            </div>
+                                                            <div className="text-xs text-gray-600 font-bold bg-gray-100 px-3 py-2 rounded-lg">
+                                                                ⏱️ {idea.timeline}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-2xl font-black text-gray-900">OTHER ACTION ITEMS</h3>
+                                    {improvementIdeas.filter(i => i.priority !== 'CRITICAL').map(idea => (
+                                        <div 
+                                            key={idea.id} 
+                                            className={`border-l-8 ${idea.categoryColor} bg-white rounded-xl shadow-lg hover:shadow-xl transition-all`}
+                                        >
+                                            <div className="p-6">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex items-start gap-4 flex-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIdeas.includes(idea.id)}
+                                                            onChange={() => toggleIdeaSelection(idea.id)}
+                                                            className="mt-2 w-6 h-6"
+                                                        />
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-3 mb-3">
+                                                                <span className="text-xs font-black text-gray-500 uppercase">{idea.category}</span>
+                                                                <span className={`px-3 py-1 text-xs font-black rounded-full ${
+                                                                    idea.priority === 'HIGH' ? 'bg-orange-500 text-white' : 'bg-yellow-500 text-white'
+                                                                }`}>
+                                                                    {idea.priority}
+                                                                </span>
+                                                            </div>
+                                                            <h3 className="font-black text-gray-900 text-xl mb-2">{idea.title}</h3>
+                                                            <p className="text-gray-700 text-sm mb-4">{idea.description}</p>
+                                                            
+                                                            <button
+                                                                onClick={() => toggleSection(idea.id)}
+                                                                className="text-blue-700 text-sm font-bold flex items-center gap-2"
+                                                            >
+                                                                {expandedSections[idea.id] ? <ChevronUp /> : <ChevronDown />}
+                                                                {expandedSections[idea.id] ? 'Hide' : 'Show'} Discussion Points
+                                                            </button>
+
+                                                            {expandedSections[idea.id] && (
+                                                                <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                                                                    <ul className="space-y-2">
+                                                                        {idea.discussion.map((point, idx) => (
+                                                                            <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                                                                                <span className="text-blue-600 font-bold">•</span>
+                                                                                <span>{point}</span>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-end gap-2">
+                                                        <button
+                                                            onClick={() => voteIdea(idea.id)}
+                                                            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold"
+                                                        >
+                                                            👍 Vote
+                                                        </button>
+                                                        <div className="text-sm font-bold">{votedIdeas[idea.id] || 0} votes</div>
+                                                        <div className="text-xs text-gray-500">{idea.timeline}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {selectedIdeas.length > 0 && (
+                                    <div className="bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl shadow-2xl p-8 text-white">
+                                        <h3 className="text-3xl font-black mb-4">
+                                            ✅ Team Has Selected {selectedIdeas.length} Action Items
+                                        </h3>
+                                        <button
+                                            onClick={generateExcelDownload}
+                                            className="w-full bg-white text-gray-900 font-black py-5 px-8 rounded-xl shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-4 text-xl"
+                                        >
+                                            <Download />
+                                            Download UPDATED Results with Votes & Priorities
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Supervisors Tab */}
+                        {activeTab === 'supervisors' && (
+                            <div className="space-y-6">
+                                <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Team Performance by Supervisor</h2>
+                                    <p className="text-gray-600">Color-coded alerts: 🔴 Critical | 🟡 Warning | 🟢 Good</p>
+                                </div>
+
+                                {supervisors.map(supervisor => (
+                                    <div 
+                                        key={supervisor.name}
+                                        className={`rounded-2xl shadow-xl p-8 ${
+                                            supervisor.alert === 'critical' ? 'bg-red-50 border-4 border-red-600 critical-alert' :
+                                            supervisor.alert === 'warning' ? 'bg-yellow-50 border-4 border-yellow-500' :
+                                            'bg-white border-2 border-gray-200'
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div>
+                                                <h3 className="text-3xl font-black text-gray-900 mb-2 flex items-center gap-3">
+                                                    {supervisor.name}
+                                                </h3>
+                                                <p className="text-lg text-gray-600 font-semibold">{supervisor.responses} teammates responded</p>
+                                                <div className="mt-4 text-sm text-gray-500 space-y-1">
+                                                    <p><strong>Q1:</strong> Understanding of "Barriers to Execution" concept</p>
+                                                    <p><strong>Q2:</strong> Leadership effectiveness in removing obstacles</p>
+                                                    <p><strong>Q3:</strong> Importance of focusing on barrier removal</p>
+                                                </div>
+                                                {supervisor.alert === 'critical' && (
+                                                    <div className="mt-4 inline-block px-5 py-3 bg-red-600 text-white rounded-xl font-black text-lg animate-pulse-slow">
+                                                        🚨 CRITICAL ATTENTION REQUIRED - Q1 at 4.83/10
+                                                    </div>
+                                                )}
+                                                {supervisor.alert === 'warning' && (
+                                                    <div className="mt-4 inline-block px-5 py-3 bg-yellow-600 text-white rounded-xl font-bold text-base">
+                                                        ⚠️ Q1 Needs Improvement
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="text-center bg-gray-800 text-white rounded-2xl p-6 min-w-[150px]">
+                                                <div className="text-sm font-semibold mb-1">Overall Score</div>
+                                                <div className="text-5xl font-black">{supervisor.overall}</div>
+                                                <div className="text-sm mt-1">/10</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-6">
+                                            {[
+                                                {label: 'Q1: Understanding', value: supervisor.q1, key: 'q1'},
+                                                {label: 'Q2: Leadership', value: supervisor.q2, key: 'q2'},
+                                                {label: 'Q3: Importance', value: supervisor.q3, key: 'q3'}
+                                            ].map(item => (
+                                                <div key={item.key} className="bg-white rounded-xl p-5 shadow-lg border-2 border-gray-100">
+                                                    <div className="text-sm text-gray-600 font-bold mb-2">{item.label}</div>
+                                                    <div className="text-4xl font-black text-gray-900 mb-3">{item.value}</div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                                                        <div 
+                                                            className={`h-4 rounded-full transition-all duration-1000 ${
+                                                                item.value < 6 ? 'bg-red-600' : 
+                                                                item.value < 7 ? 'bg-yellow-500' : 
+                                                                'bg-green-500'
+                                                            }`}
+                                                            style={{ width: `${(item.value / 10) * 100}%` }}
+                                                        />
+                                                    </div>
+                                                    <div className="mt-2 text-xs font-bold">
+                                                        {item.value < 6 && <span className="text-red-600">🔴 CRITICAL</span>}
+                                                        {item.value >= 6 && item.value < 7 && <span className="text-yellow-600">🟡 NEEDS WORK</span>}
+                                                        {item.value >= 7 && <span className="text-green-600">🟢 GOOD</span>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<BarriersApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
